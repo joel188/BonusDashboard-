@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Pulse - Panel de Monitoreo Transaccional</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js para gráficos de análisis -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            overflow-x: hidden;
+        }
+        [data-bs-theme="dark"] body {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        /* Sidebar styling */
+        #sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1040;
+        }
+        [data-bs-theme="dark"] #sidebar {
+            background-color: #1e293b;
+            border-right-color: #334155;
+        }
+        @media (max-width: 991.98px) {
+            #sidebar {
+                margin-left: -260px;
+                position: fixed;
+                height: 100vh;
+            }
+            #sidebar.active {
+                margin-left: 0;
+            }
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            color: #64748b;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            margin: 0.25rem 0.75rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        [data-bs-theme="dark"] .sidebar-link {
+            color: #94a3b8;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.08);
+        }
+        [data-bs-theme="dark"] .sidebar-link:hover, [data-bs-theme="dark"] .sidebar-link.active {
+            color: #38bdf8;
+            background-color: rgba(56, 189, 248, 0.1);
+        }
+        .sidebar-link i {
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+        }
+        /* Card & Table Polish */
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+            background-color: #ffffff;
+        }
+        [data-bs-theme="dark"] .card {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        .table-data {
+            font-size: 0.875rem;
+        }
+        .badge-status {
+            font-weight: 500;
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #198754;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(25, 135, 84, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(25, 135, 84, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="d-flex" id="wrapper">
+        
+        <!-- SIDEBAR -->
+        <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 min-vh-100">
+            <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none px-2 py-1">
+                <i class="bi bi-shield-lock-fill fs-4 text-primary me-2"></i>
+                <span class="fs-5 fw-bold tracking-tight">EnterprisePulse</span>
+            </div>
+            <hr class="text-secondary opacity-25">
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item mb-1">
+                    <a href="#" class="sidebar-link active">
+                        <i class="bi bi-speedometer2"></i> Monitoreo en Vivo
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="#transacciones" class="sidebar-link">
+                        <i class="bi bi-table"></i> Transacciones Core
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="#rendimiento" class="sidebar-link">
+                        <i class="bi bi-cpu"></i> Salud de Servidores
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="#comparativa" class="sidebar-link">
+                        <i class="bi bi-info-circle"></i> Marco Conceptual
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-journal-text"></i> Auditoría y Logs
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-gear"></i> Configuración API
+                    </a>
+                </li>
+            </ul>
+            <hr class="text-secondary opacity-25">
+            <div class="px-2 py-1 text-muted small">
+                <div class="fw-semibold">Nodo Principal: US-EAST-01</div>
+                <div>Build: v4.8.2-enterprise</div>
+            </div>
+        </nav>
+
+        <!-- PAGE CONTENT -->
+        <div id="page-content-wrapper" class="w-100 d-flex flex-column min-vh-100">
+            
+            <!-- TOP NAVBAR -->
+            <nav class="navbar navbar-expand px-4 py-3 border-bottom bg-body">
+                <div class="container-fluid px-0">
+                    <button class="btn btn-outline-secondary border-0 me-3 d-lg-none" id="sidebarToggle">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="pulse-dot"></span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small fw-medium">
+                            Sistemas Operativos 99.98%
+                        </span>
+                    </div>
+
+                    <div class="navbar-nav ms-auto align-items-center gap-3">
+                        <button class="btn btn-sm btn-outline-secondary border-0" id="themeToggle" title="Cambiar Tema">
+                            <i class="bi bi-moon-stars fs-5"></i>
+                        </button>
+                        <div class="dropdown">
+                            <a href="#" class="position-relative text-decoration-none text-secondary px-2" data-bs-toggle="dropdown">
+                                <i class="bi bi-bell fs-5"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">Nuevas alertas</span>
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 300px;">
+                                <li class="dropdown-header fw-bold text-uppercase fs-7 text-muted">Alertas Operativas (2)</li>
+                                <li><a class="dropdown-item rounded py-2 small" href="#"><strong>Latencia elevada:</strong> Nodo API-04 (+140ms)</a></li>
+                                <li><a class="dropdown-item rounded py-2 small" href="#"><strong>Backup completado:</strong> 1.2TB respaldados con éxito</a></li>
+                            </ul>
+                        </div>
+                        <div class="vr h-50 my-auto text-secondary opacity-25"></div>
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-body" data-bs-toggle="dropdown">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                    JV
+                                </div>
+                                <div class="d-none d-md-block text-start">
+                                    <div class="fw-semibold small lh-1">Jose Miguel Villatoro</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Ingeniero de Operaciones</div>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item py-2 small" href="#"><i class="bi bi-person me-2"></i> Perfil Interno</a></li>
+                                <li><a class="dropdown-item py-2 small" href="#"><i class="bi bi-shield-check me-2"></i> Permisos RBAC</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 text-danger small" href="#"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- MAIN CONTENT CONTAINER -->
+            <main class="container-fluid px-4 py-4 flex-grow-1">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h4 fw-bold mb-1">Panel de Operaciones Core</h1>
+                        <p class="text-muted small mb-0">Monitoreo transaccional en tiempo real para personal interno y auditoría técnica.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" onclick="location.reload()">
+                            <i class="bi bi-arrow-clockwise"></i> Sincronizar
+                        </button>
+                        <button class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+                            <i class="bi bi-download"></i> Exportar CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI CARDS GRID -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="text-muted small fw-semibold text-uppercase">Transacciones del Día</span>
+                                    <h3 class="fw-bold mb-0 mt-1">48,291</h3>
+                                </div>
+                                <div class="p-2 bg-primary-subtle text-primary rounded">
+                                    <i class="bi bi-receipt fs-5"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small fw-medium mt-auto">
+                                <i class="bi bi-arrow-up-right"></i> +12.4% <span class="text-muted fw-normal">vs ayer a esta hora</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="text-muted small fw-semibold text-uppercase">Latencia Promedio</span>
+                                    <h3 class="fw-bold mb-0 mt-1">42 ms</h3>
+                                </div>
+                                <div class="p-2 bg-success-subtle text-success rounded">
+                                    <i class="bi bi-speedometer fs-5"></i>
+                                </div>
+                            </div>
+                            <div class="text-success small fw-medium mt-auto">
+                                <i class="bi bi-check-circle"></i> Óptimo <span class="text-muted fw-normal">(< 60ms umbral)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="text-muted small fw-semibold text-uppercase">Errores HTTP (5xx)</span>
+                                    <h3 class="fw-bold mb-0 text-danger mt-1">12</h3>
+                                </div>
+                                <div class="p-2 bg-danger-subtle text-danger rounded">
+                                    <i class="bi bi-exclamation-triangle fs-5"></i>
+                                </div>
+                            </div>
+                            <div class="text-danger small fw-medium mt-auto">
+                                <i class="bi bi-arrow-down-right"></i> -3 <span class="text-muted fw-normal">en la última hora</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="text-muted small fw-semibold text-uppercase">Personal Interno Activo</span>
+                                    <h3 class="fw-bold mb-0 mt-1">142</h3>
+                                </div>
+                                <div class="p-2 bg-info-subtle text-info rounded">
+                                    <i class="bi bi-people fs-5"></i>
+                                </div>
+                            </div>
+                            <div class="text-muted small fw-medium mt-auto">
+                                <i class="bi bi-shield-fill-check text-success"></i> Sesiones seguras MFA activas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHARTS ROW -->
+                <div class="row g-3 mb-4" id="rendimiento">
+                    <div class="col-xl-8">
+                        <div class="card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title fw-bold fs-6 mb-0">Volumen de Transacciones por Hora</h5>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnradio1" checked>
+                                    <label class="btn btn-outline-secondary" for="btnradio1">Hoy</label>
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnradio2">
+                                    <label class="btn btn-outline-secondary" for="btnradio2">7 Días</label>
+                                </div>
+                            </div>
+                            <div style="height: 280px;">
+                                <canvas id="txChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-4">
+                        <div class="card p-3 h-100">
+                            <h5 class="card-title fw-bold fs-6 mb-3">Salud de Servidores / Nodos</h5>
+                            <div class="d-flex flex-column gap-3">
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1 fw-medium">
+                                        <span>Cluster US-East (API Core)</span>
+                                        <span class="text-success">98% CPU</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 78%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1 fw-medium">
+                                        <span>Cluster EU-Central (Auth)</span>
+                                        <span class="text-warning">45% CPU</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 45%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1 fw-medium">
+                                        <span>Base de Datos Principal (PostgreSQL)</span>
+                                        <span class="text-danger">88% RAM</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 88%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1 fw-medium">
+                                        <span>Redis Cache Cluster</span>
+                                        <span class="text-success">22% Memoria</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 22%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-auto pt-3 border-top text-muted small">
+                                <i class="bi bi-info-circle"></i> Auto-balanceo activo en 4 regiones.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRANSACTIONAL TABLE SECTION -->
+                <div class="card mb-4" id="transacciones">
+                    <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="card-title fw-bold fs-6 mb-0">Registro de Transacciones en Tiempo Real</h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" placeholder="Buscar ID o usuario...">
+                            <select class="form-select form-select-sm" style="width: 140px;">
+                                <option selected>Todos los estados</option>
+                                <option value="1">Completado</option>
+                                <option value="2">Pendiente</option>
+                                <option value="3">Fallido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 table-data">
+                                <thead class="table-light text-uppercase fs-7 text-secondary">
+                                    <tr>
+                                        <th class="ps-3">ID Transacción</th>
+                                        <th>Timestamp (UTC)</th>
+                                        <th>Servicio Origen</th>
+                                        <th>Monto / Ref</th>
+                                        <th>Estado</th>
+                                        <th class="text-end pe-3">Acciones Internas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">#TX-94821</td>
+                                        <td class="text-muted">2026-10-11 08:52:10</td>
+                                        <td>Billing-API-v2</td>
+                                        <td>$4,250.00 USD</td>
+                                        <td><span class="badge badge-status bg-success-subtle text-success border border-success-subtle">Completado</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver traza"><i class="bi bi-file-code"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary py-0 px-2" title="Reintentar"><i class="bi bi-arrow-repeat"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">#TX-94820</td>
+                                        <td class="text-muted">2026-10-11 08:51:45</td>
+                                        <td>Auth-Gateway</td>
+                                        <td>Token Auth</td>
+                                        <td><span class="badge badge-status bg-success-subtle text-success border border-success-subtle">Completado</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver traza"><i class="bi bi-file-code"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary py-0 px-2" title="Reintentar"><i class="bi bi-arrow-repeat"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">#TX-94819</td>
+                                        <td class="text-muted">2026-10-11 08:50:12</td>
+                                        <td>Inventory-Sync</td>
+                                        <td>Batch #892</td>
+                                        <td><span class="badge badge-status bg-warning-subtle text-warning border border-warning-subtle">Pendiente</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver traza"><i class="bi bi-file-code"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary py-0 px-2" title="Reintentar"><i class="bi bi-arrow-repeat"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">#TX-94818</td>
+                                        <td class="text-muted">2026-10-11 08:48:33</td>
+                                        <td>Payment-Stripe-Worker</td>
+                                        <td>$890.50 USD</td>
+                                        <td><span class="badge badge-status bg-danger-subtle text-danger border border-danger-subtle">Fallido (502)</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver traza"><i class="bi bi-file-code"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2" title="Forzar Reintento Manual"><i class="bi bi-exclamation-octagon"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">#TX-94817</td>
+                                        <td class="text-muted">2026-10-11 08:45:01</td>
+                                        <td>User-Profile-Service</td>
+                                        <td>Payload Update</td>
+                                        <td><span class="badge badge-status bg-success-subtle text-success border border-success-subtle">Completado</span></td>
+                                        <td class="text-end pe-3">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" title="Ver traza"><i class="bi bi-file-code"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary py-0 px-2" title="Reintentar"><i class="bi bi-arrow-repeat"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent py-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Mostrando 5 de 48,291 registros activos</span>
+                        <nav aria-label="Navegación de tabla">
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- CONCEPTUAL FRAMEWORK SECTION -->
+                <div class="card border-primary border-opacity-25 bg-primary-subtle bg-opacity-10 mb-4" id="comparativa">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="p-3 bg-primary text-white rounded-3 fs-4 d-none d-sm-flex align-items-center justify-content-center">
+                                <i class="bi bi-lightbulb-fill"></i>
+                            </div>
+                            <div>
+                                <h4 class="h5 fw-bold text-primary mb-2">Diferenciación Conceptual: Sitio Comercial vs. Sitio Empresarial</h4>
+                                <p class="text-muted small mb-3">
+                                    Este panel ilustra los principios fundamentales que separan una plataforma orientada a operaciones internas de un sitio comercial orientado a usuarios externos y ventas.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white dark-card rounded border h-100">
+                                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-shop text-secondary me-2"></i>Sitio Comercial (Público / Ventas)</h6>
+                                            <ul class="text-muted small mb-0 ps-3">
+                                                <li><strong>Enfoque:</strong> Atracción visual, conversión, marketing y experiencia de compra del consumidor.</li>
+                                                <li><strong>Audiencia:</strong> Clientes externos, público general y visitantes ocasionales.</li>
+                                                <li><strong>Estética:</strong> Animaciones llamativas, llamadas a la acción agresivas (CTA), imágenes grandes, marketing emocional.</li>
+                                                <li><strong>Métricas clave:</strong> Tasa de conversión (CR), carritos abandonados, costo de adquisición (CAC).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white dark-card rounded border h-100">
+                                            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building-gear text-primary me-2"></i>Sitio Empresarial (Monitoreo / Interno)</h6>
+                                            <ul class="text-muted small mb-0 ps-3">
+                                                <li><strong>Enfoque:</strong> Funcionalidad interna, eficiencia operativa, densidad de datos y control transaccional.</li>
+                                                <li><strong>Audiencia:</strong> Personal interno, administradores, analistas y auditores de sistemas.</li>
+                                                <li><strong>Estética:</strong> Sobria, limpia, tipografía optimizada para lectura rápida, jerarquía visual basada en datos de misión crítica.</li>
+                                                <li><strong>Métricas clave:</strong> KPIs de uptime, latencia de red, tasas de error (5xx), volumen transaccional.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="footer mt-auto py-3 bg-body border-top text-center text-muted small px-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>EnterprisePulse Operations Suite &copy; 2026. Todos los derechos reservados.</div>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-decoration-none text-muted">Soporte Técnico</a>
+                        <a href="#" class="text-decoration-none text-muted">Documentación API</a>
+                        <a href="#" class="text-decoration-none text-muted">Estado de Red</a>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle Sidebar for mobile view
+        document.getElementById('sidebarToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // Theme Toggle Functionality
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', function() {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeToggleBtn.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun-fill fs-5 text-warning"></i>' : '<i class="bi bi-moon-stars fs-5"></i>';
+        });
+
+        // Chart.js Configuration for Transaction Volume
+        const ctx = document.getElementById('txChart').getContext('2d');
+        const txChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00'],
+                datasets: [{
+                    label: 'Transacciones Exitosas',
+                    data: [1200, 950, 1400, 3100, 6800, 8900, 7400, 8200],
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 3
+                }, {
+                    label: 'Errores / Fallidos',
+                    data: [15, 8, 22, 45, 90, 60, 35, 12],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'transparent',
+                    borderDash: [4, 4],
+                    borderWidth: 2,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            font: { family: 'Inter', size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(200, 200, 200, 0.15)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
